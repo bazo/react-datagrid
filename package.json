@@ -1,0 +1,28 @@
+{
+	"name": "@bazo/datagrid",
+	"version": "0.0.1",
+	"description": "React.js datagrid",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"repository": "git@github.com:bazo/react-datagrid.git",
+	"author": "Martin Bazik <martin@bazo.sk>",
+	"license": "MIT",
+	"private": false,
+	"dependencies": {
+		"react": "^16.13.1",
+		"react-virtualized": "^9.21.2"
+	},
+	"devDependencies": {
+		"@types/react": "^16.9.34",
+		"@types/react-virtualized": "^9.21.9",
+		"typescript": "^3.8.3"
+	},
+	"scripts": {
+		"build": "tsc",
+		"prepublish": "yarn build",
+		"pub": "yarn publish --access public"
+	},
+	"files": [
+		"lib/**/*"
+	]
+}
