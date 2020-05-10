@@ -63,7 +63,7 @@ const actionsRenderer = (actions: ActionRenderer[]) => ({
 	});
 };
 
-const DataTable = ({
+export const DataTable = ({
 	columns,
 	columnWidths,
 	defaultColumnWidth = 150,
