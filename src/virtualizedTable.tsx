@@ -25,7 +25,7 @@ const rowClassName = ({ index }: { index: number }): string => {
 	return `virtualized-table-row ${(index + 1) % 2 === 0 ? "even" : "odd"}`;
 };
 
-export const VirtualizedTable: FC<Props> = ({
+const VirtualizedTable: FC<Props> = ({
 	disableHeader = false,
 	headerHeight = 35,
 	rowCount,

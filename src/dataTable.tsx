@@ -2,29 +2,29 @@ import React, { useMemo, ReactNode } from "react";
 import VirtualizedTable from "./virtualizedTable";
 import { Column, TableCellProps } from "react-virtualized";
 
-interface Columns {
-	[key: string]: string;
-}
-interface ColumnWidths {
+interface ColumnWidths<T> {
 	[key: string]: number;
 }
 
-type CellRenderer = (value: any, row?: object) => string | ReactNode;
-type ActionRenderer = (row: object) => ReactNode;
+type CellRenderer<V, T> = (value: V, row?: T, key?: keyof T) => string | ReactNode;
+type ActionRenderer<T> = (row: T) => ReactNode;
+type ActionFunction<T> = (row: T) => ActionRenderer<T> | ReactNode;
+type Renderers<T> = {
+	[K in keyof T]: CellRenderer<T[K], T>;
+};
 
-interface Props {
-	columns: Columns;
-	columnWidths?: ColumnWidths;
-	data: {
-		[K in keyof Columns]: any;
-	}[];
-	renderers?: {
-		[K in keyof Columns]: CellRenderer;
+interface Props<T> {
+	columns: {
+		[K in keyof T]?: string;
 	};
-	actions?: ActionRenderer[];
+	columnWidths?: ColumnWidths<T>;
+	data: T[];
+	renderers?: Renderers<T>;
+	actions?: (ActionRenderer<T> | ActionFunction<T>)[];
 	virtual?: boolean;
 	children?: React.ReactNode;
 	defaultColumnWidth?: number;
+	icon?: ReactNode;
 }
 
 const defaultCellRenderer = ({
@@ -39,7 +39,7 @@ const defaultCellRenderer = ({
 	return cellData;
 };
 
-const wrapRenderer = (renderer: CellRenderer) => ({
+const wrapRenderer = <V, T>(renderer: CellRenderer<V, T>) => ({
 	cellData,
 	columnData,
 	columnIndex,
@@ -49,7 +49,7 @@ const wrapRenderer = (renderer: CellRenderer) => ({
 	rowIndex,
 }: TableCellProps): ReactNode => renderer(cellData, rowData);
 
-const actionsRenderer = (actions: ActionRenderer[]) => ({
+const actionsRenderer = <T,>(actions: ActionRenderer<T>[]) => ({
 	cellData,
 	columnData,
 	columnIndex,
@@ -63,36 +63,45 @@ const actionsRenderer = (actions: ActionRenderer[]) => ({
 	});
 };
 
-export const DataTable = ({
+const DataTable = <T extends object>({
 	columns,
 	columnWidths,
 	defaultColumnWidth = 150,
 	data,
-	renderers = {},
+	renderers = {} as Renderers<T>,
 	actions = [],
 	virtual = false,
 	children,
-}: Props) => {
-	const columnEntries = useMemo(() => Object.entries(columns), [columns]);
+	icon,
+}: Props<T>) => {
+	const columnEntries = useMemo<[[keyof T, string]]>(
+		() => (Object.entries(columns) as unknown) as [[keyof T, string]],
+		[columns]
+	);
 
 	const rowGetter = ({ index }: { index: number }) => {
 		return data[index];
 	};
 
 	if (virtual) {
-		let columns: React.ReactElement<any, typeof Column>[] = [];
-
 		if (!children) {
-			columns = columnEntries.map(([key, title]) => {
+			let columns = columnEntries.map(entry => {
+				const [key, title] = entry as [keyof T, string];
 				return (
 					<Column
-						key={key}
-						dataKey={key}
+						key={key as string}
+						dataKey={key as string}
 						label={title}
 						headerClassName={`header ${key}`}
 						className={`cell ${key}`}
-						width={columnWidths && columnWidths[key] ? columnWidths[key] : defaultColumnWidth}
-						cellRenderer={renderers[key] ? wrapRenderer(renderers[key]) : defaultCellRenderer}
+						width={
+							columnWidths && columnWidths[key as string]
+								? columnWidths[key as string]
+								: defaultColumnWidth
+						}
+						cellRenderer={
+							renderers[key] ? wrapRenderer<T[typeof key], T>(renderers[key]) : defaultCellRenderer
+						}
 					/>
 				);
 			});
@@ -106,7 +115,7 @@ export const DataTable = ({
 						headerClassName={`header actions`}
 						className={`cell actions`}
 						width={200 + (actions.length - 1) * 50}
-						cellRenderer={actionsRenderer(actions)}
+						cellRenderer={actionsRenderer<T>(actions)}
 						disableSort={true}
 					/>
 				);
@@ -123,8 +132,9 @@ export const DataTable = ({
 		<table className="table table-striped table-hover table-sm">
 			<thead className="thead-dark">
 				<tr>
+					{icon && <th>{icon}</th>}
 					{columnEntries.map(([key, title]) => {
-						return <th key={key}>{title}</th>;
+						return <th key={key as string}>{title}</th>;
 					})}
 					{actions.length > 0 && <th>Actions</th>}
 				</tr>
@@ -134,14 +144,24 @@ export const DataTable = ({
 				{data.map((row, index) => {
 					return (
 						<tr key={index}>
+							{icon && <td>&nbsp;</td>}
 							{columnEntries.map(([key, title]) => {
 								const value = row[key];
-								return <td key={key}>{renderers[key] ? renderers[key](value, row) : value}</td>;
+								return (
+									<td key={key as string}>
+										{renderers[key] ? renderers[key](value, row, key) : value}
+									</td>
+								);
 							})}
 							{actions.length > 0 && (
 								<td>
 									{actions.map(action => {
-										return action(row);
+										const node = action(row);
+
+										if (typeof node === "function") {
+											return node(row);
+										}
+										return node;
 									})}
 									&nbsp;
 								</td>
