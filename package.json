@@ -1,6 +1,6 @@
 {
 	"name": "@bazo/datagrid",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "React.js datagrid",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
