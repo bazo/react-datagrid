@@ -63,7 +63,7 @@ const actionsRenderer = <T,>(actions: ActionRenderer<T>[]) => ({
 	});
 };
 
-const DataTable = <T extends object>({
+export const DataTable = <T extends object>({
 	columns,
 	columnWidths,
 	defaultColumnWidth = 150,
