@@ -11,6 +11,7 @@ interface Props<T> {
 	icon?: ReactNode;
 	className?: string;
 	headerClassName?: string;
+	onRowClick?: (row: T) => void;
 }
 
 export const DataGrid = <T extends object>({
@@ -21,6 +22,7 @@ export const DataGrid = <T extends object>({
 	icon,
 	className,
 	headerClassName,
+	onRowClick,
 }: Props<T>) => {
 	const columnEntries = useMemo<[[keyof T, string]]>(
 		() => (Object.entries(columns) as unknown) as [[keyof T, string]],
@@ -46,7 +48,15 @@ export const DataGrid = <T extends object>({
 							{icon && <td>&nbsp;</td>}
 							{columnEntries.map(([key, title]) => {
 								const value = row[key];
-								return <td className={key as string} key={key as string}>{renderers[key] ? renderers[key]!(value, row, key) : value}</td>;
+								return (
+									<td
+										className={key as string}
+										key={key as string}
+										onClick={onRowClick ? onRowClick?.bind(null, row) : undefined}
+									>
+										{renderers[key] ? renderers[key]!(value, row, key) : value}
+									</td>
+								);
 							})}
 							{actions.length > 0 && (
 								<td>
