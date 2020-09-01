@@ -46,7 +46,7 @@ export const DataGrid = <T extends object>({
 							{icon && <td>&nbsp;</td>}
 							{columnEntries.map(([key, title]) => {
 								const value = row[key];
-								return <td key={key as string}>{renderers[key] ? renderers[key]!(value, row, key) : value}</td>;
+								return <td className={key as string} key={key as string}>{renderers[key] ? renderers[key]!(value, row, key) : value}</td>;
 							})}
 							{actions.length > 0 && (
 								<td>
