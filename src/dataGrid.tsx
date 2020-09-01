@@ -9,6 +9,8 @@ interface Props<T> {
 	renderers?: Renderers<T>;
 	actions?: (ActionRenderer<T> | ActionFunction<T>)[];
 	icon?: ReactNode;
+	className?: string;
+	headerClassName?: string;
 }
 
 export const DataGrid = <T extends object>({
@@ -17,6 +19,8 @@ export const DataGrid = <T extends object>({
 	renderers = {} as Renderers<T>,
 	actions = [],
 	icon,
+	className,
+	headerClassName,
 }: Props<T>) => {
 	const columnEntries = useMemo<[[keyof T, string]]>(
 		() => (Object.entries(columns) as unknown) as [[keyof T, string]],
@@ -24,8 +28,8 @@ export const DataGrid = <T extends object>({
 	);
 
 	return (
-		<table className="table table-striped table-hover table-sm">
-			<thead className="thead-dark">
+		<table className={className}>
+			<thead className={headerClassName}>
 				<tr>
 					{icon && <th>{icon}</th>}
 					{columnEntries.map(([key, title]) => {
@@ -42,15 +46,11 @@ export const DataGrid = <T extends object>({
 							{icon && <td>&nbsp;</td>}
 							{columnEntries.map(([key, title]) => {
 								const value = row[key];
-								return (
-									<td key={key as string}>
-										{renderers[key] ? renderers[key]!(value, row, key) : value}
-									</td>
-								);
+								return <td key={key as string}>{renderers[key] ? renderers[key]!(value, row, key) : value}</td>;
 							})}
 							{actions.length > 0 && (
 								<td>
-									{actions.map(action => {
+									{actions.map((action) => {
 										const node = action(row);
 
 										if (typeof node === "function") {
