@@ -1,4 +1,4 @@
-import React, { useMemo, ReactNode } from "react";
+import React, { useMemo, ReactNode, useState, useEffect } from "react";
 import { ActionRenderer, Renderers, ActionFunction } from "./types";
 
 interface Props<T> {
@@ -11,7 +11,8 @@ interface Props<T> {
 	icon?: ReactNode;
 	className?: string;
 	headerClassName?: string;
-	onRowClick?: (row: T) => void;
+	onRowClick?: (row: T, index: number) => void;
+	preselectedRow?: number;
 }
 
 export const DataGrid = <T extends object>({
@@ -23,11 +24,27 @@ export const DataGrid = <T extends object>({
 	className,
 	headerClassName,
 	onRowClick,
+	preselectedRow,
 }: Props<T>) => {
 	const columnEntries = useMemo<[[keyof T, string]]>(
 		() => (Object.entries(columns) as unknown) as [[keyof T, string]],
 		[columns]
 	);
+
+	const [selectedRow, selectRow] = useState<number>(preselectedRow as number);
+
+	useEffect(() => {
+		if (preselectedRow !== undefined && preselectedRow !== null) {
+			handleRowClick(data[preselectedRow], preselectedRow);
+		}
+	}, [preselectedRow]);
+
+	const handleRowClick = (row: T, index: number): void => {
+		selectRow(index);
+		if (onRowClick) {
+			onRowClick(row, index);
+		}
+	};
 
 	return (
 		<table className={className}>
@@ -44,16 +61,12 @@ export const DataGrid = <T extends object>({
 			<tbody>
 				{data.map((row, index) => {
 					return (
-						<tr key={index}>
+						<tr key={index} className={index === selectedRow ? "selected" : undefined}>
 							{icon && <td>&nbsp;</td>}
 							{columnEntries.map(([key, title]) => {
 								const value = row[key];
 								return (
-									<td
-										className={key as string}
-										key={key as string}
-										onClick={onRowClick ? onRowClick?.bind(null, row) : undefined}
-									>
+									<td className={key as string} key={key as string} onClick={handleRowClick.bind(null, row, index)}>
 										{renderers[key] ? renderers[key]!(value, row, key) : value}
 									</td>
 								);
